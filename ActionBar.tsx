@@ -1,5 +1,5 @@
-import React, { forwardRef, useImperativeHandle, useRef } from "react";
-import { GestureResponderEvent, PanResponderGestureState, StyleSheet, View, ViewProps } from "react-native";
+import React, { forwardRef, useImperativeHandle, useRef, useState } from "react";
+import { GestureResponderEvent, LayoutChangeEvent, PanResponderGestureState, StyleSheet, View, ViewProps } from "react-native";
 
 export interface ActionBarProps extends ViewProps{
   direction?: 'left' | 'right';
@@ -37,6 +37,8 @@ const ActionBar = forwardRef<ActionBarRef, ActionBarProps>(
       ...rest
     } = props;
 
+    const [ containerHeight, setContainerHeight ] = useState<number>();
+
     const rootRef = useRef<View>(null);
 
     useImperativeHandle(ref, () => ({
@@ -44,7 +46,12 @@ const ActionBar = forwardRef<ActionBarRef, ActionBarProps>(
 
       },
       root: rootRef.current
-    }))
+    }));
+
+    const handleLayoutRoot = (e: LayoutChangeEvent) => {
+      const { height: h } = e.nativeEvent.layout;
+      h === containerHeight || setContainerHeight(h);
+    }
 
     return (
       <View
@@ -55,8 +62,17 @@ const ActionBar = forwardRef<ActionBarRef, ActionBarProps>(
           StyleSheet.flatten(style),
           !!height && { height }
         ]}
+        onLayout={handleLayoutRoot}
       >
+        <View
+          style={[
+            componentProps.buttons?.style,
+            styles.actions,
+            direction === 'left' ? styles.actionsLeft : styles.actionsRight
+          ]}
+        >
 
+        </View>
       </View>
     );
   }
@@ -64,7 +80,19 @@ const ActionBar = forwardRef<ActionBarRef, ActionBarProps>(
 
 const styles = StyleSheet.create({
   root: {
-    minHeight: 50
+    minHeight: 50,
+    position: 'relative',
+  },
+  actions: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+  },
+  actionsLeft: {
+    left: 0,
+  },
+  actionsRight: {
+    right: 0,
   }
 });
 
